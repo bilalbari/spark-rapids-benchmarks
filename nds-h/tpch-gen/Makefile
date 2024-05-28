@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-all: check-tpch-env prepare-target copy-dbgen modify-makefile modify-tpc-h build-dbgen set-env-variables apply-patch-files
+all: check-tpch-env prepare-target copy-dbgen modify-makefile modify-tpc-h build-dbgen
 
 check-tpch-env:
 ifndef TPCH_HOME
@@ -28,7 +28,7 @@ prepare-target:
 
 copy-dbgen:
 	#Copying all patches to the current query folder
-	cp patches/template.patch "$(TPCH_HOME)/dbgen/queries"
+	cp patches/template_new.patch "$(TPCH_HOME)/dbgen/queries"
 	# This is required to ensure similar line ending semantics bw patch
 	# file and the sql files
 	cd "$(TPCH_HOME)/dbgen/queries"; dos2unix *.sql
@@ -46,6 +46,7 @@ modify-makefile:
 	sed -i '109s/$$/ SPARK/' target/dbgen/Makefile
 	sed -i '110s/$$/ LINUX/' target/dbgen/Makefile
 	sed -i '111s/$$/ TPCH/' target/dbgen/Makefile
+	sed -i '172i fprintf(ofp, "\\n-- Template file: %s\\n", qtag);' target/dbgen/qgen.c
 
 modify-tpc-h:
 	# Enter information for the SPARK replacement variables

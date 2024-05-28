@@ -40,9 +40,9 @@ from pyspark.sql import SparkSession
 from PysparkBenchReport import PysparkBenchReport
 from pyspark.sql import DataFrame
 
-from check import check_json_summary_folder, check_query_subset_exists, check_version
-from ndsH_gen_query_stream import split_special_query
+from check import check_version
 from ndsH_schema import get_schemas
+import re
 
 check_version()
 
@@ -56,27 +56,29 @@ def gen_sql_from_stream(query_stream_file_path):
     Returns:
         ordered dict: an ordered dict of {query_name: query content} query pairs
     """
+    extended_queries = OrderedDict()
     with open(query_stream_file_path, 'r') as f:
         stream = f.read()
-    all_queries = stream.split('-- start')[1:]
-    # split query in query14, query23, query24, query39
-    extended_queries = OrderedDict()
-    for q in all_queries:
-        # e.g. "-- start query 32 in stream 0 using template query98.tpl"
-        query_name = q[q.find('template')+9: q.find('.tpl')]
-        if 'select' in q.split(';')[1]:
-            part_1, part_2 = split_special_query(q)
-            extended_queries[query_name + '_part1'] = part_1
-            extended_queries[query_name + '_part2'] = part_2
-        else:
-            extended_queries[query_name] = q
+    pattern = re.compile(r'-- Template file: (\d+)\n\n(.*?)(?=(?:-- Template file: \d+)|\Z)', re.DOTALL)
 
-    # add "-- start" string back to each query
-    for q_name, q_content in extended_queries.items():
-        extended_queries[q_name] = '-- start' + q_content
+    # Find all matches in the content
+    matches = pattern.findall(stream)
+
+# Populate the dictionary with template file numbers as keys and queries as values
+    for match in matches:
+        template_number = match[0]
+        if int(template_number) == 15:
+            new_queries = match[1].split(";")
+            extended_queries[f'{template_number}_part1'] = new_queries[0].strip()
+            extended_queries[f'{template_number}_part2'] = new_queries[1].strip()
+            extended_queries[f'{template_number}_part3'] = new_queries[2].strip()
+        else:
+            sql_query = match[1].strip()
+            extended_queries[f'{template_number}'] = sql_query
+
     return extended_queries
 
-def setup_tables(spark_session, input_prefix, input_format, use_decimal, execution_time_list):
+def setup_tables(spark_session, input_prefix, input_format, execution_time_list):
     """set up data tables in Spark before running the Power Run queries.
 
     Args:
@@ -87,16 +89,16 @@ def setup_tables(spark_session, input_prefix, input_format, use_decimal, executi
         execution_time_list ([(str, str, int)]): a list to record query and its execution time.
 
     Returns:
-        execution_time_list: a list recording query execution time.
+        execution_time_list: a list recording que15ry execution time.
     """
     spark_app_id = spark_session.sparkContext.applicationId
     # Create TempView for tables
-    for table_name in get_schemas(False).keys():
+    for table_name in get_schemas().keys():
         start = int(time.time() * 1000)
         table_path = input_prefix + '/' + table_name
         reader =  spark_session.read.format(input_format)
         if input_format in ['csv', 'json']:
-            reader = reader.schema(get_schemas(use_decimal)[table_name])
+            reader = reader.schema(get_schemas()[table_name])
         reader.load(table_path).createOrReplaceTempView(table_name)
         end = int(time.time() * 1000)
         print("====== Creating TempView for table {} ======".format(table_name))
@@ -104,35 +106,6 @@ def setup_tables(spark_session, input_prefix, input_format, use_decimal, executi
         execution_time_list.append(
             (spark_app_id, "CreateTempView {}".format(table_name), end - start))
     return execution_time_list
-
-def register_delta_tables(spark_session, input_prefix, execution_time_list):
-    spark_app_id = spark_session.sparkContext.applicationId
-    # Register tables for Delta Lake
-    for table_name in get_schemas(False).keys():
-        start = int(time.time() * 1000)
-        # input_prefix must be absolute path: https://github.com/delta-io/delta/issues/555
-        register_sql = f"CREATE TABLE IF NOT EXISTS {table_name} USING DELTA LOCATION '{input_prefix}/{table_name}'"
-        print(register_sql)
-        spark_session.sql(register_sql)
-        end = int(time.time() * 1000)
-        print("====== Registering for table {} ======".format(table_name))
-        print("Time taken: {} millis for table {}".format(end - start, table_name))
-        execution_time_list.append(
-            (spark_app_id, "Register {}".format(table_name), end - start))
-    return execution_time_list
-
-
-def run_one_query(spark_session,
-                  query,
-                  query_name,
-                  output_path,
-                  output_format):
-    df = spark_session.sql(query)
-    if not output_path:
-        df.collect()
-    else:
-        ensure_valid_column_names(df).write.format(output_format).mode('overwrite').save(
-                output_path + '/' + query_name)
 
 def ensure_valid_column_names(df: DataFrame):
     def is_column_start(char):
@@ -173,29 +146,25 @@ def ensure_valid_column_names(df: DataFrame):
     dedup_col_names = deduplicate(valid_col_names)
     return df.toDF(*dedup_col_names)
 
-def get_query_subset(query_dict, subset):
-    """Get a subset of queries from query_dict.
-    The subset is specified by a list of query names.
-    """
-    check_query_subset_exists(query_dict, subset)
-    return dict((k, query_dict[k]) for k in subset)
-
+def run_one_query(spark_session,
+                  query,
+                  query_name,
+                  output_path,
+                  output_format):
+    df = spark_session.sql(query)
+    if not output_path:
+        df.collect()
+    else:
+        ensure_valid_column_names(df).write.format(output_format).mode('overwrite').save(
+                output_path + '/' + query_name)
 
 def run_query_stream(input_prefix,
                      property_file,
                      query_dict,
                      time_log_output_path,
-                     extra_time_log_output_path,
-                     sub_queries,
                      input_format="parquet",
-                     use_decimal=True,
                      output_path=None,
-                     output_format="parquet",
-                     json_summary_folder=None,
-                     delta_unmanaged=False,
-                     keep_sc=False,
-                     hive_external=False,
-                     allow_failure=False):
+                     output_format="parquet"):
     """run SQL in Spark and record execution time log. The execution time log is saved as a CSV file
     for easy accesibility. TempView Creation time is also recorded.
 
@@ -215,10 +184,7 @@ def run_query_stream(input_prefix,
     execution_time_list = []
     total_time_start = time.time()
     # check if it's running specific query or Power Run
-    if len(query_dict) == 1:
-        app_name = "NDS - " + list(query_dict.keys())[0]
-    else:
-        app_name = "NDS - Power Run"
+    app_name = "NDS - Power Run"
     # Execute Power Run or Specific query in Spark
     # build Spark Session
     session_builder = SparkSession.builder
@@ -226,31 +192,13 @@ def run_query_stream(input_prefix,
         spark_properties = load_properties(property_file)
         for k,v in spark_properties.items():
             session_builder = session_builder.config(k,v)
-    if input_format == 'iceberg':
-        session_builder.config("spark.sql.catalog.spark_catalog.warehouse", input_prefix)
-    if input_format == 'delta' and not delta_unmanaged:
-        session_builder.config("spark.sql.warehouse.dir", input_prefix)
-        session_builder.enableHiveSupport()
-    if hive_external:
-        session_builder.enableHiveSupport()
-
     spark_session = session_builder.appName(
         app_name).getOrCreate()
-    if hive_external:
-        spark_session.catalog.setCurrentDatabase(input_prefix)
-
-    if input_format == 'delta' and delta_unmanaged:
-        # Register tables for Delta Lake. This is only needed for unmanaged tables.
-        execution_time_list = register_delta_tables(spark_session, input_prefix, execution_time_list)
     spark_app_id = spark_session.sparkContext.applicationId
-    if input_format != 'iceberg' and input_format != 'delta' and not hive_external:
-        execution_time_list = setup_tables(spark_session, input_prefix, input_format, use_decimal,
+    if input_format != 'iceberg' and input_format != 'delta':
+        execution_time_list = setup_tables(spark_session, input_prefix, input_format,
                                            execution_time_list)
 
-    check_json_summary_folder(json_summary_folder)
-    if sub_queries:
-        query_dict = get_query_subset(query_dict, sub_queries)
-    # Run query
     power_start = int(time.time())
     for query_name, q_content in query_dict.items():
         # show query name in Spark web UI
@@ -266,18 +214,9 @@ def run_query_stream(input_prefix,
         query_times = summary['queryTimes']
         execution_time_list.append((spark_app_id, query_name, query_times[0]))
         queries_reports.append(q_report)
-        if json_summary_folder:
-            # property_file e.g.: "property/aqe-on.properties" or just "aqe-off.properties"
-            if property_file:
-                summary_prefix = os.path.join(
-                    json_summary_folder, os.path.basename(property_file).split('.')[0])
-            else:
-                summary_prefix =  os.path.join(json_summary_folder, '')
-            q_report.write_summary(prefix=summary_prefix)
     power_end = int(time.time())
     power_elapse = int((power_end - power_start)*1000)
-    if not keep_sc:
-        spark_session.sparkContext.stop()
+    spark_session.sparkContext.stop()
     total_time_end = time.time()
     total_elapse = int((total_time_end - total_time_start)*1000)
     print("====== Power Test Time: {} milliseconds ======".format(power_elapse))
@@ -302,11 +241,6 @@ def run_query_stream(input_prefix,
         writer.writerow(header)
         writer.writerows(execution_time_list)
     # write to csv in cloud environment
-    if extra_time_log_output_path:
-        spark_session = SparkSession.builder.getOrCreate()
-        time_df = spark_session.createDataFrame(data=execution_time_list, schema = header)
-        time_df.coalesce(1).write.csv(extra_time_log_output_path)
-
     # check queries_reports, if there's any task or query failed, exit a non-zero to represent the script failure
     exit_code = 0
     for q in queries_reports:
@@ -317,9 +251,6 @@ def run_query_stream(input_prefix,
             exit_code = 1
     if exit_code:
         print("Above queries failed or completed with failed tasks. Please check the logs for the detailed reason.")
-
-    if not allow_failure and exit_code:
-        sys.exit(exit_code)
 
 def load_properties(filename):
     myvars = {}
@@ -363,14 +294,6 @@ if __name__ == "__main__":
                      args.property_file,
                      query_dict,
                      args.time_log,
-                     args.extra_time_log,
-                     args.sub_queries,
                      args.input_format,
-                     not args.floats,
                      args.output_prefix,
-                     args.output_format,
-                     args.json_summary_folder,
-                     args.delta_unmanaged,
-                     args.keep_sc,
-                     args.hive,
-                     args.allow_failure)
+                     args.output_format)
