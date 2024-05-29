@@ -32,7 +32,6 @@
 
 import argparse
 import os
-import shutil
 import subprocess
 
 from check import check_build, check_version, get_abs_path, get_dir_size, parallel_value_type, valid_range

@@ -33,7 +33,6 @@
 import argparse
 import timeit
 import pyspark
-import os
 
 from datetime import datetime
 

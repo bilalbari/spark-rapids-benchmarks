@@ -36,8 +36,11 @@ import time
 import traceback
 from typing import Callable
 from pyspark.sql import SparkSession
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-import python_listener
+# Construct the path to the utils directory
+utils_dir = os.path.join(parent_dir, 'python_listener')
+from PythonListener import PythonListener
 
 class PysparkBenchReport:
     """Class to generate json summary report for a benchmark
@@ -76,7 +79,7 @@ class PysparkBenchReport:
         self.summary['env']['sparkVersion'] = self.spark_session.version
         listener = None
         try:
-            listener = python_listener.PythonListener()
+            listener = PythonListener()
             listener.register()
         except TypeError as e:
             print("Not found com.nvidia.spark.rapids.listener.Manager", str(e))

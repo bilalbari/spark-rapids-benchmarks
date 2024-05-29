@@ -32,11 +32,20 @@
 
 import argparse
 import csv
-import os
-import sys
 import time
 from collections import OrderedDict
 from pyspark.sql import SparkSession
+import os
+import sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+# Construct the path to the utils directory
+utils_dir = os.path.join(parent_dir, 'utils/python_bechmark_reporter')
+print(parent_dir)
+print(utils_dir)
+# Add the utils directory to sys.path
+sys.path.insert(0, utils_dir)
+
 from PysparkBenchReport import PysparkBenchReport
 from pyspark.sql import DataFrame
 

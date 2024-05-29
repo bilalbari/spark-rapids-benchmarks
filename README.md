@@ -5,6 +5,7 @@ A repo for Spark related benchmark sets and utilities using the
 
 ## Benchmark sets:
 - [Nvidia Decision Support(NDS)](./nds/)
+- [Nvidia Decision Support-H(NDS-H)](./nds-h/)
 
 Please see README in each benchmark set for more details including building instructions and usage
 descriptions.
