@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,16 +18,16 @@
 #
 # -----
 #
-# Certain portions of the contents of this file are derived from TPC-DS version 3.2.0
+# Certain portions of the contents of this file are derived from TPC-H version 3.0.1
 # (retrieved from www.tpc.org/tpc_documents_current_versions/current_specifications5.asp).
 # Such portions are subject to copyrights held by Transaction Processing Performance Council (“TPC”)
 # and licensed under the TPC EULA (a copy of which accompanies this file as “TPC EULA” and is also
 # available at http://www.tpc.org/tpc_documents_current_versions/current_specifications5.asp) (the “TPC EULA”).
 #
 # You may not use this file except in compliance with the TPC EULA.
-# DISCLAIMER: Portions of this file is derived from the TPC-DS Benchmark and as such any results
-# obtained using this file are not comparable to published TPC-DS Benchmark results, as the results
-# obtained from using this file do not comply with the TPC-DS Benchmark.
+# DISCLAIMER: Portions of this file is derived from the TPC-H Benchmark and as such any results
+# obtained using this file are not comparable to published TPC-H Benchmark results, as the results
+# obtained from using this file do not comply with the TPC-H Benchmark.
 #
 
 import argparse
@@ -40,17 +40,15 @@ import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Construct the path to the utils directory
-utils_dir = os.path.join(parent_dir, 'utils/python_bechmark_reporter')
-print(parent_dir)
-print(utils_dir)
+utils_dir = os.path.join(parent_dir, 'utils')
 # Add the utils directory to sys.path
 sys.path.insert(0, utils_dir)
 
-from PysparkBenchReport import PysparkBenchReport
+from python_benchmark_reporter.PysparkBenchReport import PysparkBenchReport
 from pyspark.sql import DataFrame
 
 from check import check_version
-from ndsH_schema import get_schemas
+from nds_h_schema import get_schemas
 import re
 
 check_version()
@@ -78,12 +76,12 @@ def gen_sql_from_stream(query_stream_file_path):
         template_number = match[0]
         if int(template_number) == 15:
             new_queries = match[1].split(";")
-            extended_queries[f'{template_number}_part1'] = new_queries[0].strip()
-            extended_queries[f'{template_number}_part2'] = new_queries[1].strip()
-            extended_queries[f'{template_number}_part3'] = new_queries[2].strip()
+            extended_queries[f'query{template_number}_part1'] = new_queries[0].strip()
+            extended_queries[f'query{template_number}_part2'] = new_queries[1].strip()
+            extended_queries[f'query{template_number}_part3'] = new_queries[2].strip()
         else:
             sql_query = match[1].strip()
-            extended_queries[f'{template_number}'] = sql_query
+            extended_queries[f'query{template_number}'] = sql_query
 
     return extended_queries
 

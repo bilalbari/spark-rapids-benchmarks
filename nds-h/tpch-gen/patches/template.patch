@@ -1,5 +1,5 @@
 diff --git a/1.sql b/1.sql
-index 407417e..dd89885 100644
+index 407417e..12815a0 100644
 --- a/1.sql
 +++ b/1.sql
 @@ -18,11 +18,11 @@ select
@@ -18,7 +18,7 @@ index 407417e..dd89885 100644
 +	l_linestatus
 +;
 diff --git a/10.sql b/10.sql
-index 2c8810c..1062dff 100644
+index 2c8810c..55d13eb 100644
 --- a/10.sql
 +++ b/10.sql
 @@ -34,5 +34,6 @@ group by
@@ -26,12 +26,11 @@ index 2c8810c..1062dff 100644
  	c_comment
  order by
 -	revenue desc;
--:n 20
 +	revenue desc
-+:n 20
+ :n 20
 +;
 diff --git a/11.sql b/11.sql
-index 885185c..f486d23 100644
+index 885185c..c0c6372 100644
 --- a/11.sql
 +++ b/11.sql
 @@ -30,5 +30,5 @@ group by
@@ -43,7 +42,7 @@ index 885185c..f486d23 100644
 +	value desc
 +;
 diff --git a/12.sql b/12.sql
-index 0eb4aec..f5a4b19 100644
+index 0eb4aec..7b41659 100644
 --- a/12.sql
 +++ b/12.sql
 @@ -31,5 +31,5 @@ where
@@ -55,17 +54,19 @@ index 0eb4aec..f5a4b19 100644
 +	l_shipmode
 +;
 diff --git a/13.sql b/13.sql
-index 90d0750..177458e 100644
+index 90d0750..2d85977 100644
 --- a/13.sql
 +++ b/13.sql
-@@ -24,4 +24,4 @@ group by
+@@ -23,5 +23,5 @@ group by
+ 	c_count
  order by
  	custdist desc,
- 	c_count desc;
+-	c_count desc;
 -:n -1
++	c_count desc
 +;
 diff --git a/14.sql b/14.sql
-index b5e45e3..f1a9b25 100644
+index b5e45e3..eb4815a 100644
 --- a/14.sql
 +++ b/14.sql
 @@ -16,5 +16,5 @@ from
@@ -77,9 +78,18 @@ index b5e45e3..f1a9b25 100644
 +	and l_shipdate < date ':1' + interval '1' month
 +;
 diff --git a/15.sql b/15.sql
-index 8e7e974..8c5a314 100644
+index 8e7e974..a966331 100644
 --- a/15.sql
 +++ b/15.sql
+@@ -3,7 +3,7 @@
+ -- Functional Query Definition
+ -- Approved February 1998
+ :x
+-create view revenue:s (supplier_no, total_revenue) as
++create temp view revenue:s (supplier_no, total_revenue) as
+ 	select
+ 		l_suppkey,
+ 		sum(l_extendedprice * (1 - l_discount))
 @@ -36,5 +36,5 @@ where
  order by
  	s_suppkey;
@@ -89,7 +99,7 @@ index 8e7e974..8c5a314 100644
 +drop view revenue:s
 +;
 diff --git a/16.sql b/16.sql
-index 0dabfb5..e5d43d0 100644
+index 0dabfb5..bc347b0 100644
 --- a/16.sql
 +++ b/16.sql
 @@ -33,5 +33,5 @@ order by
@@ -101,7 +111,7 @@ index 0dabfb5..e5d43d0 100644
 +	p_size
 +;
 diff --git a/17.sql b/17.sql
-index 3968f54..78795fc 100644
+index 3968f54..c4f9373 100644
 --- a/17.sql
 +++ b/17.sql
 @@ -20,5 +20,5 @@ where
@@ -113,7 +123,7 @@ index 3968f54..78795fc 100644
 +	)
 +;
 diff --git a/18.sql b/18.sql
-index cce174f..cc0971c 100644
+index cce174f..6b38325 100644
 --- a/18.sql
 +++ b/18.sql
 @@ -35,5 +35,6 @@ group by
@@ -121,12 +131,11 @@ index cce174f..cc0971c 100644
  order by
  	o_totalprice desc,
 -	o_orderdate;
--:n 100
 +	o_orderdate
-+:n 100
+ :n 100
 +;
 diff --git a/19.sql b/19.sql
-index 8b7b915..b9d0ddf 100644
+index 8b7b915..5c32dcf 100644
 --- a/19.sql
 +++ b/19.sql
 @@ -38,5 +38,5 @@ where
@@ -138,7 +147,7 @@ index 8b7b915..b9d0ddf 100644
 +	)
 +;
 diff --git a/2.sql b/2.sql
-index 2308318..e681f91 100644
+index 2308318..572a927 100644
 --- a/2.sql
 +++ b/2.sql
 @@ -46,5 +46,6 @@ order by
@@ -146,12 +155,12 @@ index 2308318..e681f91 100644
  	n_name,
  	s_name,
 -	p_partkey;
--:n 100
 +	p_partkey
-+:n 100
+ :n 100
 +;
+\ No newline at end of file
 diff --git a/20.sql b/20.sql
-index 1d358bf..3d4a944 100644
+index 1d358bf..1323de7 100644
 --- a/20.sql
 +++ b/20.sql
 @@ -40,5 +40,5 @@ where
@@ -163,7 +172,7 @@ index 1d358bf..3d4a944 100644
 +	s_name
 +;
 diff --git a/21.sql b/21.sql
-index 38187dc..665984a 100644
+index 38187dc..671435d 100644
 --- a/21.sql
 +++ b/21.sql
 @@ -42,5 +42,6 @@ group by
@@ -171,12 +180,11 @@ index 38187dc..665984a 100644
  order by
  	numwait desc,
 -	s_name;
--:n 100
 +	s_name
-+:n 100
+ :n 100
 +;
 diff --git a/22.sql b/22.sql
-index 9a2aeb7..ecc864d 100644
+index 9a2aeb7..88a377e 100644
 --- a/22.sql
 +++ b/22.sql
 @@ -40,5 +40,5 @@ from
@@ -188,7 +196,7 @@ index 9a2aeb7..ecc864d 100644
 +	cntrycode
 +;
 diff --git a/3.sql b/3.sql
-index f054d31..741c0a5 100644
+index f054d31..46f33c6 100644
 --- a/3.sql
 +++ b/3.sql
 @@ -25,5 +25,6 @@ group by
@@ -196,12 +204,11 @@ index f054d31..741c0a5 100644
  order by
  	revenue desc,
 -	o_orderdate;
--:n 10
 +	o_orderdate
-+:n 10
+ :n 10
 +;
 diff --git a/4.sql b/4.sql
-index f068f36..fa4e0e5 100644
+index f068f36..ed3ebca 100644
 --- a/4.sql
 +++ b/4.sql
 @@ -24,5 +24,5 @@ where
@@ -213,7 +220,7 @@ index f068f36..fa4e0e5 100644
 +	o_orderpriority
 +;
 diff --git a/5.sql b/5.sql
-index 998913d..f6a93c8 100644
+index 998913d..ec16737 100644
 --- a/5.sql
 +++ b/5.sql
 @@ -27,5 +27,5 @@ where
@@ -225,7 +232,7 @@ index 998913d..f6a93c8 100644
 +	revenue desc
 +;
 diff --git a/6.sql b/6.sql
-index 59a6883..b973c57 100644
+index 59a6883..3bf726d 100644
 --- a/6.sql
 +++ b/6.sql
 @@ -12,5 +12,5 @@ where
@@ -237,7 +244,7 @@ index 59a6883..b973c57 100644
 +	and l_quantity < :3
 +;
 diff --git a/7.sql b/7.sql
-index 26eafad..b2da0bf 100644
+index 26eafad..81ba730 100644
 --- a/7.sql
 +++ b/7.sql
 @@ -42,5 +42,5 @@ group by
@@ -249,7 +256,7 @@ index 26eafad..b2da0bf 100644
 +	l_year
 +;
 diff --git a/8.sql b/8.sql
-index 977d24e..6b48f09 100644
+index 977d24e..9b67466 100644
 --- a/8.sql
 +++ b/8.sql
 @@ -40,5 +40,5 @@ from
@@ -261,7 +268,7 @@ index 977d24e..6b48f09 100644
 +	o_year
 +;
 diff --git a/9.sql b/9.sql
-index b262db4..8d7ba7b 100644
+index b262db4..1e7aa9e 100644
 --- a/9.sql
 +++ b/9.sql
 @@ -35,5 +35,5 @@ group by
@@ -274,3 +281,4 @@ index b262db4..8d7ba7b 100644
 +;
 -- 
 2.34.1
+

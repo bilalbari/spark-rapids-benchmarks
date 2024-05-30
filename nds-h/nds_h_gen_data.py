@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,23 +18,29 @@
 #
 # -----
 #
-# Certain portions of the contents of this file are derived from TPC-DS version 3.2.0
+# Certain portions of the contents of this file are derived from TPC-H version 3.0.1
 # (retrieved from www.tpc.org/tpc_documents_current_versions/current_specifications5.asp).
 # Such portions are subject to copyrights held by Transaction Processing Performance Council (“TPC”)
 # and licensed under the TPC EULA (a copy of which accompanies this file as “TPC EULA” and is also
 # available at http://www.tpc.org/tpc_documents_current_versions/current_specifications5.asp) (the “TPC EULA”).
 #
 # You may not use this file except in compliance with the TPC EULA.
-# DISCLAIMER: Portions of this file is derived from the TPC-DS Benchmark and as such any results
-# obtained using this file are not comparable to published TPC-DS Benchmark results, as the results
-# obtained from using this file do not comply with the TPC-DS Benchmark.
+# DISCLAIMER: Portions of this file is derived from the TPC-H Benchmark and as such any results
+# obtained using this file are not comparable to published TPC-H Benchmark results, as the results
+# obtained from using this file do not comply with the TPC-H Benchmark.
 #
 
 import argparse
 import os
+import sys
 import subprocess
 
-from check import check_build, check_version, get_abs_path, get_dir_size, parallel_value_type, valid_range
+#For adding utils to path
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+utils_dir = os.path.join(parent_dir, 'utils')
+sys.path.insert(0, utils_dir)
+
+from check import check_build_nds_h, check_version, get_abs_path, get_dir_size, parallel_value_type, valid_range
 
 check_version()
 
@@ -66,7 +72,6 @@ def generate_data_local(args, range_start, range_end, tool_path):
         Exception: dsdgen failed
     """
     data_dir = get_abs_path(args.data_dir)
-    print(data_dir)
     if not os.path.isdir(data_dir):
         os.makedirs(data_dir)
     else:
@@ -111,8 +116,7 @@ def generate_data_local(args, range_start, range_end, tool_path):
     subprocess.run(['du', '-h', '-d1', data_dir])
 
 def generate_data(args):
-    tool_path = check_build()
-    print(tool_path)
+    tool_path = check_build_nds_h()
     range_start = 1
     range_end = int(args.parallel)
     if args.range:
@@ -136,5 +140,9 @@ if __name__ == "__main__":
                         'chunks are generated in one run. Format: "start,end", both are inclusive. ' +
                         'e.g. "1,100". Note: the child range must be within the "parallel", ' +
                         '"--parallel 100 --range 100,200" is illegal.')
+    parser.add_argument("--overwrite_output",
+                        action="store_true",
+                        help="overwrite if there has already existing data in the path provided.")
+    
     args = parser.parse_args()
     generate_data(args)

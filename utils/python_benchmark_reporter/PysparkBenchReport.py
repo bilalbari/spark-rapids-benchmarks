@@ -36,8 +36,7 @@ import time
 import traceback
 from typing import Callable
 from pyspark.sql import SparkSession
-
-import python_listener
+from python_benchmark_reporter.PythonListener import PythonListener
 
 class PysparkBenchReport:
     """Class to generate json summary report for a benchmark
@@ -76,7 +75,7 @@ class PysparkBenchReport:
         self.summary['env']['sparkVersion'] = self.spark_session.version
         listener = None
         try:
-            listener = python_listener.PythonListener()
+            listener = PythonListener()
             listener.register()
         except TypeError as e:
             print("Not found com.nvidia.spark.rapids.listener.Manager", str(e))

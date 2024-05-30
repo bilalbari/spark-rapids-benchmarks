@@ -37,10 +37,15 @@ import sys
 import time
 from collections import OrderedDict
 from pyspark.sql import SparkSession
-from PysparkBenchReport import PysparkBenchReport
 from pyspark.sql import DataFrame
 
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+utils_dir = os.path.join(parent_dir, 'utils')
+sys.path.insert(0, utils_dir)
+
+from python_benchmark_reporter.PysparkBenchReport import PysparkBenchReport
 from check import check_json_summary_folder, check_query_subset_exists, check_version
+
 from nds_gen_query_stream import split_special_query
 from nds_schema import get_schemas
 

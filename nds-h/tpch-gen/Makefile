@@ -23,12 +23,12 @@ ifndef TPCH_HOME
 endif
 
 prepare-target:
-	rm -R target
+	rm -Rf target
 	mkdir -p target/
 
 copy-dbgen:
 	#Copying all patches to the current query folder
-	cp patches/template_new.patch "$(TPCH_HOME)/dbgen/queries"
+	cp patches/template.patch "$(TPCH_HOME)/dbgen/queries"
 	# This is required to ensure similar line ending semantics bw patch
 	# file and the sql files
 	cd "$(TPCH_HOME)/dbgen/queries"; dos2unix *.sql
