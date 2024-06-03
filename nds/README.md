@@ -345,11 +345,11 @@ Example command to submit nds_power.py by spark-submit-template utility:
 
 ```bash
 ./spark-submit-template power_run_gpu.template \
-../nds_power.py \
+nds_power.py \
 parquet_sf3k \
-<query_stream_folder>/query_0.sql \
+./nds_query_stream/query_0.sql \
 time.csv \
---property_file ./properties/aqe-on.properties
+--property_file properties/aqe-on.properties
 ```
 
 User can also use `spark-submit` to submit `nds_power.py` directly.
@@ -366,9 +366,9 @@ The command above will use `collect()` action to trigger Spark job for each quer
 
 ```bash
 ./spark-submit-template power_run_gpu.template \
-./nds_power.py \
+nds_power.py \
 parquet_sf3k \
-<query_stream_folder>/query_0.sql \
+./nds_query_streams/query_0.sql \
 time.csv \
 --output_prefix /data/query_output \
 --output_format parquet
@@ -386,7 +386,7 @@ and _query_2.sql_ and produces csv log for execution time _time_1.csv_ and _time
 
 ```bash
 ./nds-throughput 1,2 \
-./spark-submit-template ./power_run_gpu.template \
+./spark-submit-template power_run_gpu.template \
 nds_power.py \
 parquet_sf3k \
 ./nds_query_streams/query_'{}'.sql \
