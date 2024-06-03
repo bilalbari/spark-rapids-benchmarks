@@ -347,7 +347,7 @@ Example command to submit nds_power.py by spark-submit-template utility:
 ./spark-submit-template power_run_gpu.template \
 nds_power.py \
 parquet_sf3k \
-./nds_query_stream/query_0.sql \
+./nds_query_streams/query_0.sql \
 time.csv \
 --property_file properties/aqe-on.properties
 ```
