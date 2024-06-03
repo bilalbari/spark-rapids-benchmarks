@@ -34,13 +34,8 @@ import argparse
 import os
 import shutil
 import subprocess
-import sys
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-utils_dir = os.path.join(parent_dir, 'utils')
-sys.path.insert(0, utils_dir)
-
-from check import check_build_nds, check_version, get_abs_path, get_dir_size, parallel_value_type, valid_range
+from check import check_build, check_version, get_abs_path, get_dir_size, parallel_value_type, valid_range
 
 check_version()
 
@@ -250,7 +245,7 @@ def generate_data_local(args, range_start, range_end, tool_path):
 
 
 def generate_data(args):
-    jar_path, tool_path = check_build_nds()
+    jar_path, tool_path = check_build()
     range_start = 1
     range_end = int(args.parallel)
     if args.range:

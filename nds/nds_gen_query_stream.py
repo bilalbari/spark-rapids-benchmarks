@@ -35,11 +35,7 @@ import os
 import subprocess
 import sys
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-utils_dir = os.path.join(parent_dir, 'utils')
-sys.path.insert(0, utils_dir)
-
-from check import check_build_nds, check_version, get_abs_path
+from check import check_build, check_version, get_abs_path
 
 check_version()
 
@@ -107,7 +103,7 @@ def split_special_query(q):
     return part_1, part_2
 
 if __name__ == "__main__":
-    _, tool_path = check_build_nds()
+    _, tool_path = check_build()
     parser = parser = argparse.ArgumentParser()
     parser.add_argument('template_dir',
                         help='directory to find query templates and dialect file.')

@@ -35,12 +35,8 @@ import csv
 from datetime import datetime
 import os
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-utils_dir = os.path.join(parent_dir, 'utils')
-sys.path.insert(0, utils_dir)
-
 from pyspark.sql import SparkSession
-from python_benchmark_reporter.PysparkBenchReport import PysparkBenchReport
+from PysparkBenchReport import PysparkBenchReport
 
 from check import check_json_summary_folder, get_abs_path
 from nds_schema import get_maintenance_schemas

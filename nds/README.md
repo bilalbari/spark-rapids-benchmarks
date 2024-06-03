@@ -48,13 +48,12 @@ You may not use NDS except in compliance with the Apache License, Version 2.0 an
 
 To help user run NDS, we provide a template to define the main Spark configs for spark-submit command.
 User can use different templates to run NDS with different configurations for different environment.
-We create [spark-submit-template](../shared/spark-submit-template), which accepts a template file and
+We create [spark-submit-template](./spark-submit-template), which accepts a template file and
 submit the Spark job with the configs defined in the template file.
 
 Example command to submit via `spark-submit-template` utility:
 
 ```bash
-cd shared
 ./spark-submit-template convert_submit_cpu.template \
 nds_transcode.py  raw_sf3k  parquet_sf3k report.txt
 ```
@@ -74,7 +73,7 @@ For example, we provide below template files to run nds_transcode.py for differe
 * `convert_submit_gpu.template` is for Spark GPU cluster
 
 You need to choose one as your template file and modify it to fit your environment.
-We define a [base.template](../shared/base.template) to help you define some basic variables for your envionment.
+We define a [base.template](./base.template) to help you define some basic variables for your envionment.
 And all the other templates will source `base.template` to get the basic variables.
 When you hope to run multiple steps of NDS, you just need to modify `base.template` to fit for your cluster.
 
@@ -142,8 +141,8 @@ python nds_gen_data.py hdfs 100 100 /data/raw_sf100 --overwrite_output
 ### Convert CSV to Parquet or Other data sources
 
 To do the data conversion, the `nds_transcode.py` need to be submitted as a Spark job. User can leverage
-the [spark-submit-template](../shared/spark-submit-template) utility to simplify the submission.
-The utility requires a pre-defined [template file](../shared/convert_submit_gpu.template) where user needs to put
+the [spark-submit-template](./spark-submit-template) utility to simplify the submission.
+The utility requires a pre-defined [template file](./convert_submit_gpu.template) where user needs to put
 necessary Spark configurations. Either user can submit the `nds_transcode.py` directly to spark with
 arbitrary Spark parameters.
 
@@ -153,7 +152,7 @@ Parquet, Orc, Avro, JSON and Iceberg are supported for output data format at pre
 only Parquet and Orc are supported.
 
 Note: when exporting data from CSV to Iceberg, user needs to set necessary configs for Iceberg in submit template.
-e.g. [convert_submit_cpu_iceberg.template](../shared/convert_submit_cpu_iceberg.template)
+e.g. [convert_submit_cpu_iceberg.template](./convert_submit_cpu_iceberg.template)
 
 User can also specify `--tables` to convert specific table or tables. See argument details below.
 
@@ -217,7 +216,6 @@ optional arguments:
 Example command to submit via `spark-submit-template` utility:
 
 ```bash
-cd shared
 ./spark-submit-template convert_submit_gpu.template \
 nds_transcode.py  raw_sf3k  parquet_sf3k report.txt
 ```
@@ -346,13 +344,12 @@ optional arguments:
 Example command to submit nds_power.py by spark-submit-template utility:
 
 ```bash
-cd shared
 ./spark-submit-template power_run_gpu.template \
-../nds/nds_power.py \
+../nds_power.py \
 parquet_sf3k \
 <query_stream_folder>/query_0.sql \
 time.csv \
---property_file ../utils/properties/aqe-on.properties
+--property_file ./properties/aqe-on.properties
 ```
 
 User can also use `spark-submit` to submit `nds_power.py` directly.
@@ -361,16 +358,15 @@ To simplify the performance analysis process, the script will create a local CSV
 
 Note the template file must follow the `spark-submit-template` utility as the _first_ argument.
 All Spark configuration words (such as `--conf` and corresponding `k=v` values)  are quoted by
-double quotes in the template file. Please follow the format in [power_run_gpu.template](../shared/power_run_gpu.template).
+double quotes in the template file. Please follow the format in [power_run_gpu.template](./power_run_gpu.template).
 
-User can define the `properties` file like [aqe-on.properties](../utils/properties/aqe-on.properties). The properties will be passed to the submitted Spark job along with the configurations defined in the template file. User can define some common properties in the template file and put some other properties that usually varies in the property file.
+User can define the `properties` file like [aqe-on.properties](./properties/aqe-on.properties). The properties will be passed to the submitted Spark job along with the configurations defined in the template file. User can define some common properties in the template file and put some other properties that usually varies in the property file.
 
 The command above will use `collect()` action to trigger Spark job for each query. It is also supported to save query output to some place for further verification. User can also specify output format e.g. csv, parquet or orc:
 
 ```bash
-cd shared
 ./spark-submit-template power_run_gpu.template \
-../nds/nds_power.py \
+./nds_power.py \
 parquet_sf3k \
 <query_stream_folder>/query_0.sql \
 time.csv \
@@ -390,7 +386,7 @@ and _query_2.sql_ and produces csv log for execution time _time_1.csv_ and _time
 
 ```bash
 ./nds-throughput 1,2 \
-../shared/spark-submit-template ../shared/power_run_gpu.template \
+./spark-submit-template ./power_run_gpu.template \
 nds_power.py \
 parquet_sf3k \
 ./nds_query_streams/query_'{}'.sql \
@@ -409,7 +405,7 @@ update operations cannot be done atomically on raw Parquet/Orc files, so we use
 [Iceberg](https://iceberg.apache.org/) as dataset metadata manager to overcome the issue.
 
 Enabling Iceberg requires additional configuration. Please refer to [Iceberg Spark](https://iceberg.apache.org/docs/latest/getting-started/)
-for details. We also provide a Spark submit template with necessary Iceberg configs: [maintenance_iceberg.template](../shared/maintenance_iceberg.template)
+for details. We also provide a Spark submit template with necessary Iceberg configs: [maintenance_iceberg.template](./maintenance_iceberg.template)
 
 The data maintenance queries are in [data_maintenance](./data_maintenance) folder. `DF_*.sql` are
 DELETE queries while `LF_*.sql` are INSERT queries.
