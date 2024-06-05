@@ -1,5 +1,21 @@
 # NDS-H v2.0 Automation
 
+## Disclaimer
+
+NDS-H is derived from the TPC-H Benchmarks and as such any results obtained using NDS-H are not
+comparable to published TPC-H Benchmark results, as the results obtained from using NDS-H do not
+comply with the TPC-H Benchmarks.
+
+## License
+
+NDS-H is licensed under Apache License, Version 2.0.
+
+Additionally, certain files in NDS-H are licensed subject to the accompanying [TPC EULA](../TPC%20EULA.txt) (also
+available at [tpc.org](http://www.tpc.org/tpc_documents_current_versions/current_specifications5.asp). Files subject to the TPC
+EULA are identified as such within the files.
+
+You may not use NDS-H except in compliance with the Apache License, Version 2.0 and the TPC EULA.
+
 ## Prerequisites
 
 1. Python >= 3.6
