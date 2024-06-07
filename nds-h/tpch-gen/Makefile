@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-all: check-tpch-env prepare-target copy-dbgen modify-makefile modify-tpc-h build-dbgen
+all: check-tpch-env prepare-target copy-dbgen modify-makefile modify-tpc-h build-dbgen make-jar
 
 check-tpch-env:
 ifndef TPCH_HOME
@@ -63,3 +63,6 @@ modify-tpc-h:
 build-dbgen:
 	# Build it
 	cd target/dbgen ; make clean; make 2>/dev/null
+
+make-jar
+	
