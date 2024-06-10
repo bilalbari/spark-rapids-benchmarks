@@ -18,6 +18,7 @@
 package org.nvidia.nds_h;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.util.*;
@@ -56,7 +57,9 @@ public class GenTable extends Configured implements Tool {
         org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
         options.addOption("s","scale", true, "scale");
         options.addOption("d","dir", true, "dir");
+        options.addOption("t","table", true, "table");
         options.addOption("p", "parallel", true, "parallel");
+        options.addOption("o", "overwrite", false, "overwrite existing data");
         options.addOption("r", "range", true, "child range in one data generation run");
         CommandLine line = parser.parse(options, remainingArgs);
 
@@ -68,7 +71,11 @@ public class GenTable extends Configured implements Tool {
         Path out = new Path(line.getOptionValue("dir"));
         
         int scale = Integer.parseInt(line.getOptionValue("scale"));
+        
         String table = "all";
+        if(line.hasOption("table")) {
+          table = line.getOptionValue("table");
+        }
         
         int parallel = scale;
 
@@ -143,8 +150,8 @@ public class GenTable extends Configured implements Tool {
         boolean success = job.waitForCompletion(true);
 
         // cleanup
-        // fs.delete(in, false);
-        // fs.delete(dbgen, false);
+        fs.delete(in, false);
+        fs.delete(dbgen, false);
 
         return 0;
     }
@@ -168,19 +175,60 @@ public class GenTable extends Configured implements Tool {
       return dst; 
     }
 
-    public Path genInput(String table, int scale, int parallel, int rangeStart, int rangeEnd) throws Exception {
-        long epoch = System.currentTimeMillis()/1000;
+    public Path genInput(String table, int scale, int parallel, int rangeStart, int rangeEnd) throws Exception {        long epoch = System.currentTimeMillis()/1000;
 
         Path in = new Path("/tmp/"+table+"_"+scale+"-"+epoch);
         FileSystem fs = FileSystem.get(getConf());
         FSDataOutputStream out = fs.create(in);
+
+        String[ ] tables = {"c","O","L","P","S","s"};
+
         for(int i = rangeStart; i <= rangeEnd; i++) {
-          String cmd = "";
+          String baseCmd = String.format("./dbgen -s %d -C %d -S %d ",scale,parallel,i);
           if(table.equals("all")) {
-            cmd += String.format("./dbgen -s %d -C %d -S %d", scale, parallel, i);
+            for(String t: tables){
+              String cmd = baseCmd + String.format("-T %s",t);
+              out.writeBytes(cmd+"\n");
+            }
           }
-          cmd += "\n";
-          out.writeBytes(cmd);
+          else{
+            if(table.equalsIgnoreCase("customers")){
+              String cmd = baseCmd + "-T c";
+              out.writeBytes(cmd + "\n");
+            }
+            else if(table.equalsIgnoreCase("nation")){
+              String cmd = baseCmd + "-T n";
+              out.writeBytes(cmd + "\n");
+            }
+            else if(table.equalsIgnoreCase("region")){
+              String cmd = baseCmd + "-T r";
+              out.writeBytes(cmd + "\n");
+            }
+            else if(table.equalsIgnoreCase("lineItem")){
+              String cmd = baseCmd + "-T L";
+              out.writeBytes(cmd + "\n");
+            }
+            else if(table.equalsIgnoreCase("orders")){
+              String cmd = baseCmd + "-T O";
+              out.writeBytes(cmd + "\n");
+            }
+            else if(table.equalsIgnoreCase("parts")){
+              String cmd = baseCmd + "-T P";
+              out.writeBytes(cmd + "\n");
+            }
+            else if(table.equalsIgnoreCase("patsupp")){
+              String cmd = baseCmd + "-T S";
+              out.writeBytes(cmd + "\n");
+            }
+            else if(table.equalsIgnoreCase("suppliers")){
+              String cmd = baseCmd + "-T s";
+              out.writeBytes(cmd + "\n");
+            }
+          }
+        }
+        if(table.equals("all")){
+          String cmdL = String.format("./dbgen -s %d -T l",scale);
+          out.writeBytes(cmdL + "\n");
         }
         out.close();
         return in;
@@ -212,7 +260,8 @@ public class GenTable extends Configured implements Tool {
         throws IOException, InterruptedException {
         String parallel="1";
         String child="1";
-
+        String table="";
+        String suffix = "";
         String[] cmd = command.toString().split(" ");
 
         for(int i=0; i<cmd.length; i++) {
@@ -222,8 +271,12 @@ public class GenTable extends Configured implements Tool {
           if(cmd[i].equals("-S")) {
             child = cmd[i+1];
           }
+          if(cmd[i].equals("-T")) {
+            table = cmd[i+1];
+          }
         }
 
+        System.out.println("Executing command: "+ String.join(" ", cmd));
         Process p = Runtime.getRuntime().exec(cmd, null, new File("dbgen/dbgen/"));
         int status = p.waitFor();
         if(status != 0) {
@@ -231,17 +284,36 @@ public class GenTable extends Configured implements Tool {
           throw new InterruptedException("Process failed with status code " + status + "\n" + err);
         }
 
-        File cwd = new File(".");
-        final String suffix = String.format("tbl.%s", child);
+        File cwd = new File("./dbgen/dbgen");
+        if(table.equals("l") || table.equals("n") || table.equals("r"))
+          suffix = ".tbl";
+        else if(table.equals("c"))
+          suffix = String.format("customer.tbl.%s", child);
+        else if(table.equals("L"))
+          suffix = String.format("lineitem.tbl.%s",child);
+        else if(table.equals("O"))
+          suffix = String.format("orders.tbl.%s",child);
+        else if(table.equals("P"))
+          suffix = String.format("part.tbl.%s",child);
+        else if(table.equals("S"))
+          suffix = String.format("partsupp.tbl.%s",child);
+        else if(table.equals("s"))
+          suffix = String.format("supplier.tbl.%s",child);
+
+        final String suffixNew = suffix;
 
         FilenameFilter tables = new FilenameFilter() {
           public boolean accept(File dir, String name) {
-            return name.endsWith(suffix) || name.startsWith("delete") || name.startsWith("inventory_delete");
+            return name.endsWith(suffixNew);
           }
         };
 
         for(File f: cwd.listFiles(tables)) {
-          final String baseOutputPath = f.getName().replace(suffix, String.format("/data_%s_%s", child, parallel));
+          if(f != null)
+          {
+            System.out.println("Processing file: "+f.getName());
+          }
+          final String baseOutputPath = f.getName().replace(suffix.substring(suffix.indexOf('.')), String.format("/data_%s_%s", child, parallel));
           BufferedReader br = new BufferedReader(new FileReader(f));
           String line;
           while ((line = br.readLine()) != null) {
@@ -251,6 +323,7 @@ public class GenTable extends Configured implements Tool {
           br.close();
           f.deleteOnExit();
         }
+        System.out.println("Processing complete");
       }
     }
 }
