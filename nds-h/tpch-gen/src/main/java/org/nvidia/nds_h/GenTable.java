@@ -55,6 +55,14 @@ public class GenTable extends Configured implements Tool {
         CommandLineParser parser = new BasicParser();
         getConf().setInt("io.sort.mb", 4);
         org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
+        /*
+         * These are the various options being passed to the class
+         *  -s scale
+         *  -d output directory
+         *  -t specific table data
+         *  -p nunber of parallel parts
+         *  -o overwrite output directory if exists
+         */
         options.addOption("s","scale", true, "scale");
         options.addOption("d","dir", true, "dir");
         options.addOption("t","table", true, "table");
@@ -71,7 +79,7 @@ public class GenTable extends Configured implements Tool {
         Path out = new Path(line.getOptionValue("dir"));
         
         int scale = Integer.parseInt(line.getOptionValue("scale"));
-        
+
         String table = "all";
         if(line.hasOption("table")) {
           table = line.getOptionValue("table");
@@ -108,25 +116,36 @@ public class GenTable extends Configured implements Tool {
         Path in = genInput(table, scale, parallel, rangeStart, rangeEnd);
 
         Path dbgen = copyJar(new File("target/dbgen.jar"));
+
+        // Extracting the dbgen jar location and adding as a symlink as part of
+        // Mapred Cache hence enabling access by all mappers running
         URI dsuri = dbgen.toUri();
         URI link = new URI(dsuri.getScheme(),
                     dsuri.getUserInfo(), dsuri.getHost(), 
                     dsuri.getPort(),dsuri.getPath(), 
                     dsuri.getQuery(),"dbgen");
+        
         Configuration conf = getConf();
         conf.setInt("mapred.task.timeout",0);
         conf.setInt("mapreduce.task.timeout",0);
         conf.setBoolean("mapreduce.map.output.compress", true);
         conf.set("mapreduce.map.output.compress.codec", "org.apache.hadoop.io.compress.GzipCodec");
+
         DistributedCache.addCacheArchive(link, conf);
         DistributedCache.createSymlink(conf);
         Job job = new Job(conf, "GenTable+"+table+"_"+scale);
         job.setJarByClass(getClass());
+
+        // No reducers since no reduction task involved post data gen
+        // Updating mapper class
+        // Output will be a text file ( key(file_name) -> output )
         job.setNumReduceTasks(0);
         job.setMapperClass(Dbgen.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
+        // Using NLineInputFormat mapper for parsing each line of input
+        // file as separate task
         job.setInputFormatClass(NLineInputFormat.class);
         NLineInputFormat.setNumLinesPerSplit(job, 1);
 
@@ -156,6 +175,10 @@ public class GenTable extends Configured implements Tool {
         return 0;
     }
 
+    /*
+     * This function just copies the jar from the local to hdfs temp
+     * location for access by the mappers
+     */
     public Path copyJar(File jar) throws Exception {
       MessageDigest md = MessageDigest.getInstance("MD5");
       InputStream is = new FileInputStream(jar);
@@ -175,16 +198,29 @@ public class GenTable extends Configured implements Tool {
       return dst; 
     }
 
-    public Path genInput(String table, int scale, int parallel, int rangeStart, int rangeEnd) throws Exception {        long epoch = System.currentTimeMillis()/1000;
-
+    /*
+     * This function generates the various commands to be run
+     * parallely as part of the mapper for the job.
+     * Each command runs the data generation for a specific part
+     * for a table
+     */
+    public Path genInput(String table, int scale, int parallel, int rangeStart, int rangeEnd) throws Exception {        
+        // Assigning epoch based name to the temporary files
+        // Will be cleaned later
+        long epoch = System.currentTimeMillis()/1000;
         Path in = new Path("/tmp/"+table+"_"+scale+"-"+epoch);
         FileSystem fs = FileSystem.get(getConf());
         FSDataOutputStream out = fs.create(in);
 
+        // This is for passing the various params to the command
+        // for individual tables
         String[ ] tables = {"c","O","L","P","S","s"};
 
         for(int i = rangeStart; i <= rangeEnd; i++) {
           String baseCmd = String.format("./dbgen -s %d -C %d -S %d ",scale,parallel,i);
+          // In case of no specific table, data is generated for all
+          // Separate commands for each table is generated for more parallelism
+          // running multiple mappers
           if(table.equals("all")) {
             for(String t: tables){
               String cmd = baseCmd + String.format("-T %s",t);
@@ -192,6 +228,7 @@ public class GenTable extends Configured implements Tool {
             }
           }
           else{
+            // TODO - update using map based approach for a cleaner implementation
             if(table.equalsIgnoreCase("customers")){
               String cmd = baseCmd + "-T c";
               out.writeBytes(cmd + "\n");
@@ -226,10 +263,13 @@ public class GenTable extends Configured implements Tool {
             }
           }
         }
+        // nation and region tables are static tables hence adding
+        // a single command for both
         if(table.equals("all")){
           String cmdL = String.format("./dbgen -s %d -T l",scale);
           out.writeBytes(cmdL + "\n");
         }
+        // Writing the command file in temporary folder for being read by the mapper
         out.close();
         return in;
     }
@@ -277,6 +317,9 @@ public class GenTable extends Configured implements Tool {
         }
 
         System.out.println("Executing command: "+ String.join(" ", cmd));
+
+        // Running the command using ProcessBuilder. The dbgen/dbgen is the jar files
+        // of the makefile output jar
         Process p = Runtime.getRuntime().exec(cmd, null, new File("dbgen/dbgen/"));
         int status = p.waitFor();
         if(status != 0) {
@@ -284,6 +327,8 @@ public class GenTable extends Configured implements Tool {
           throw new InterruptedException("Process failed with status code " + status + "\n" + err);
         }
 
+        // This is important for segragating files in separate folder
+        // per each table
         File cwd = new File("./dbgen/dbgen");
         if(table.equals("l") || table.equals("n") || table.equals("r"))
           suffix = ".tbl";
