@@ -103,8 +103,9 @@ To generate data for local -
 
 ```bash
 $ python nds_h_gen_data.py -h
-usage: nds_h_gen_data.py [-h] <scale> <parallel> <data_dir> [--overwrite_output]
+usage: nds_h_gen_data.py [-h] {local,hdfs} <scale> <parallel> <data_dir> [--overwrite_output]
 positional arguments:
+  {local,hdfs}        file system to save the generated data.
   scale               volume of data to generate in GB.
   parallel            build data in <parallel_value> separate chunks
   data_dir            generate data in directory.
