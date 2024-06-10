@@ -204,7 +204,7 @@ def generate_data(args):
 if __name__ == "__main__":
     parser = parser = argparse.ArgumentParser()
     parser.add_argument("type",
-                        choices=["local", "hdfs"],
+                        choices=["local", "hdfs"] ,
                         help="file system to save the generated data.")
     parser.add_argument("scale",
                         help="volume of data to generate in GB. Accepted SF - 1,10, 100, 300, 1000 \
