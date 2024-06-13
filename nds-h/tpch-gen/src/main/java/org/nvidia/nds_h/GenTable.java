@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +16,11 @@
  */
 
 package org.nvidia.nds_h;
+
+import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.util.*;
 
@@ -27,18 +28,14 @@ import org.apache.hadoop.filecache.*;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.mapreduce.lib.output.*;
-import org.apache.hadoop.mapreduce.lib.reduce.*;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.*;
 
 import java.io.*;
-import java.nio.*;
-import java.util.*;
-
 import java.net.*;
 import java.math.*;
 import java.security.*;
+import java.util.Objects;
 
 
 public class GenTable extends Configured implements Tool {
@@ -54,21 +51,7 @@ public class GenTable extends Configured implements Tool {
 
         CommandLineParser parser = new BasicParser();
         getConf().setInt("io.sort.mb", 4);
-        org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
-        /*
-         * These are the various options being passed to the class
-         *  -s scale
-         *  -d output directory
-         *  -t specific table data
-         *  -p nunber of parallel parts
-         *  -o overwrite output directory if exists
-         */
-        options.addOption("s","scale", true, "scale");
-        options.addOption("d","dir", true, "dir");
-        options.addOption("t","table", true, "table");
-        options.addOption("p", "parallel", true, "parallel");
-        options.addOption("o", "overwrite", false, "overwrite existing data");
-        options.addOption("r", "range", true, "child range in one data generation run");
+        Options options = getOptions();
         CommandLine line = parser.parse(options, remainingArgs);
 
         if(!line.hasOption("scale")) {
@@ -166,13 +149,32 @@ public class GenTable extends Configured implements Tool {
         MultipleOutputs.addNamedOutput(job, "text", 
           TextOutputFormat.class, LongWritable.class, Text.class);
 
-        boolean success = job.waitForCompletion(true);
+        job.waitForCompletion(true);
 
         // cleanup
         fs.delete(in, false);
         fs.delete(dbgen, false);
 
         return 0;
+    }
+
+    private static Options getOptions() {
+        Options options = new Options();
+        /*
+         * These are the various options being passed to the class
+         *  -s scale
+         *  -d output directory
+         *  -t specific table data
+         *  -p number of parallel files to be generated
+         *  -o overwrite output directory if exists
+         */
+        options.addOption("s","scale", true, "scale");
+        options.addOption("d","dir", true, "dir");
+        options.addOption("t","table", true, "table");
+        options.addOption("p", "parallel", true, "parallel");
+        options.addOption("o", "overwrite", false, "overwrite existing data");
+        options.addOption("r", "range", true, "child range in one data generation run");
+        return options;
     }
 
     /*
@@ -229,7 +231,7 @@ public class GenTable extends Configured implements Tool {
           }
           else{
             // TODO - update using map based approach for a cleaner implementation
-            if(table.equalsIgnoreCase("customers")){
+            if(table.equalsIgnoreCase("customer")){
               String cmd = baseCmd + "-T c";
               out.writeBytes(cmd + "\n");
             }
@@ -253,11 +255,11 @@ public class GenTable extends Configured implements Tool {
               String cmd = baseCmd + "-T P";
               out.writeBytes(cmd + "\n");
             }
-            else if(table.equalsIgnoreCase("patsupp")){
+            else if(table.equalsIgnoreCase("partsupp")){
               String cmd = baseCmd + "-T S";
               out.writeBytes(cmd + "\n");
             }
-            else if(table.equalsIgnoreCase("suppliers")){
+            else if(table.equalsIgnoreCase("supplier")){
               String cmd = baseCmd + "-T s";
               out.writeBytes(cmd + "\n");
             }
@@ -347,13 +349,9 @@ public class GenTable extends Configured implements Tool {
 
         final String suffixNew = suffix;
 
-        FilenameFilter tables = new FilenameFilter() {
-          public boolean accept(File dir, String name) {
-            return name.endsWith(suffixNew);
-          }
-        };
+        FilenameFilter tables = (dir, name) -> name.endsWith(suffixNew);
 
-        for(File f: cwd.listFiles(tables)) {
+        for(File f: Objects.requireNonNull(cwd.listFiles(tables))) {
           if(f != null)
           {
             System.out.println("Processing file: "+f.getName());

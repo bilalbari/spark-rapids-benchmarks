@@ -59,6 +59,7 @@ source_table_names = [
     'supplier'
 ]
 
+
 def generate_data_local(args, range_start, range_end, tool_path):
     """Generate data to local file system. TPC-DS tool will generate all table data under target
     folder without creating sub-folders for each table. So we add extra code to create sub folder
@@ -88,10 +89,10 @@ def generate_data_local(args, range_start, range_end, tool_path):
     procs = []
     for i in range(range_start, range_end + 1):
         dbgen = ["-s", args.scale,
-                    "-C", args.parallel,
-                    "-S", str(i),
-                    "-v", "Y",
-                    "-f","Y"]
+                 "-C", args.parallel,
+                 "-S", str(i),
+                 "-v", "Y",
+                 "-f", "Y"]
         procs.append(subprocess.Popen(
             ["./dbgen"] + dbgen, cwd=str(work_dir)))
     # wait for data generation to complete
@@ -105,23 +106,25 @@ def generate_data_local(args, range_start, range_end, tool_path):
     for table in table_names:
         print('mkdir -p {}/{}'.format(data_dir, table))
         subprocess.run(['mkdir', '-p', data_dir + '/' + table])
-        if (table != 'region' and table !='nation'):
+        if (table != 'region' and table != 'nation'):
             for i in range(range_start, range_end + 1):
                 subprocess.run(['mv', f'{work_dir}/{table}.tbl.{i}',
                                 f'{data_dir}/{table}/'], stderr=subprocess.DEVNULL)
         else:
             subprocess.run(['mv', f'{work_dir}/{table}.tbl',
-                                f'{data_dir}/{table}/'], stderr=subprocess.DEVNULL)
+                            f'{data_dir}/{table}/'], stderr=subprocess.DEVNULL)
         # delete date file has no parallel number suffix in the file name, move separately
     # show summary
     subprocess.run(['du', '-h', '-d1', data_dir])
+
 
 def clean_temp_data(temp_data_path):
     cmd = ['hadoop', 'fs', '-rm', '-r', '-skipTrash', temp_data_path]
     print(" ".join(cmd))
     subprocess.run(cmd)
 
-def merge_temp_tables(temp_data_path, parent_data_path, update):
+
+def merge_temp_tables(temp_data_path, parent_data_path):
     """Helper functions for incremental data generation. Move data in temporary child range path to
     parent directory.
 
@@ -146,6 +149,7 @@ def merge_temp_tables(temp_data_path, parent_data_path, update):
         subprocess.run(cmd)
     clean_temp_data(temp_data_path)
 
+
 def generate_data_hdfs(args, jar_path):
     """generate data to hdfs using TPC-DS dsdgen tool. Support incremental generation: due to the
     limit of hdfs, each range data will be generated under a temporary folder then move to target
@@ -163,7 +167,7 @@ def generate_data_hdfs(args, jar_path):
         raise Exception('No Hadoop binary found in current environment, ' +
                         'please install Hadoop for data generation in cluster.')
     # Submit hadoop MR job to generate data
-    cmd =  ['hadoop', 'jar', str(jar_path)]
+    cmd = ['hadoop', 'jar', str(jar_path)]
     cmd += ['-p', args.parallel, '-s', args.scale]
     # get dsdgen.jar path, assume user won't change file structure
     tpcds_gen_path = jar_path.parent.parent.absolute()
@@ -182,14 +186,15 @@ def generate_data_hdfs(args, jar_path):
         try:
             subprocess.run(cmd, check=True, cwd=str(tpcds_gen_path))
             # only move delete table for data maintenance
-            merge_temp_tables(temp_data_path, args.data_dir, args.update)
+            merge_temp_tables(temp_data_path, args.data_dir)
         finally:
             clean_temp_data(temp_data_path)
     else:
         cmd.extend(["-d", args.data_dir])
         subprocess.run(cmd, check=True, cwd=str(tpcds_gen_path))
         # only move delete table for data maintenance
-        
+
+
 def generate_data(args):
     jar_path, tool_path = check_build_nds_h()
     range_start = 1
@@ -201,29 +206,30 @@ def generate_data(args):
     else:
         generate_data_local(args, range_start, range_end, tool_path)
 
+
 if __name__ == "__main__":
     parser = parser = argparse.ArgumentParser()
     parser.add_argument("type",
-                        choices=["local", "hdfs"] ,
+                        choices=["local", "hdfs"],
                         help="file system to save the generated data.")
     parser.add_argument("scale",
                         help="volume of data to generate in GB. Accepted SF - 1,10, 100, 300, 1000 \
                             ,3000, 10000, 30000,"
-    )
+                        )
     parser.add_argument("parallel",
                         type=parallel_value_type,
                         help="build data in <parallel_value> separate chunks"
-    )
+                        )
     parser.add_argument("data_dir",
                         help="generate data in directory.")
     parser.add_argument('--range',
                         help='Used for incremental data generation, meaning which part of child' +
-                        'chunks are generated in one run. Format: "start,end", both are inclusive. ' +
-                        'e.g. "1,100". Note: the child range must be within the "parallel", ' +
-                        '"--parallel 100 --range 100,200" is illegal.')
+                             'chunks are generated in one run. Format: "start,end", both are inclusive. ' +
+                             'e.g. "1,100". Note: the child range must be within the "parallel", ' +
+                             '"--parallel 100 --range 100,200" is illegal.')
     parser.add_argument("--overwrite_output",
                         action="store_true",
                         help="overwrite if there has already existing data in the path provided.")
-    
+
     args = parser.parse_args()
     generate_data(args)
