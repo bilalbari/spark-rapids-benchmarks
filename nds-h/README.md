@@ -119,7 +119,7 @@ optional arguments:
 Example command:
 
 ```bash
-python nds_h_gen_data.py 100 100 /data/raw_sf100 --overwrite_output
+python nds_h_gen_data.py hdfs 100 100 /data/raw_sf100 --overwrite_output
 ```
 
 ### Convert DSV to Parquet or Other data sources
