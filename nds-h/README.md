@@ -220,6 +220,11 @@ optional arguments:
                         type of query output
   --property_file PROPERTY_FILE
                         property file for Spark configuration.
+  --json_summary_folder JSON_SUMMARY_FOLDER
+                        Empty folder/path (will create if not exist) to save JSON summary file for each query.
+  --sub_queries SUB_QUERIES
+                        comma separated list of queries to run. If not specified, all queries in the stream file will be run. 
+                        e.g. "query1,query2,query3". Note, use "_part1","_part2" and "part_3" suffix for the following query names: query15
 ```
 
 Example command to submit nds_h_power.py by spark-submit-template utility:

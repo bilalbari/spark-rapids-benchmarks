@@ -107,6 +107,8 @@ def setup_tables(spark_session, input_prefix, input_format, execution_time_list)
         reader = spark_session.read.format(input_format)
         if input_format in ['csv', 'json']:
             reader = reader.schema(get_schemas()[table_name])
+        print("Loading table ", table_path)
+        print("table name ", table_name)
         reader.load(table_path).createOrReplaceTempView(table_name)
         end = int(time.time() * 1000)
         print("====== Creating TempView for table {} ======".format(table_name))
@@ -182,7 +184,7 @@ def run_query_stream(input_prefix,
                      query_dict,
                      time_log_output_path,
                      sub_queries,
-                     input_format="parquet",
+                     input_format,
                      output_path=None,
                      output_format="parquet",
                      json_summary_folder=None):
@@ -309,7 +311,7 @@ def load_properties(filename):
 
 
 if __name__ == "__main__":
-    parser = parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument('input_prefix',
                         help='text to prepend to every input file path (e.g., "hdfs:///ds-generated-data"). ' +
                              'If --hive or if input_format is "iceberg", this argument will be regarded as the value of property ' +
@@ -350,8 +352,9 @@ if __name__ == "__main__":
                      args.property_file,
                      query_dict,
                      args.time_log,
-                     args.input_format,
-                     args.json_summary_folder,
                      args.sub_queries,
+                     args.input_format,
                      args.output_prefix,
-                     args.output_format)
+                     args.output_format,
+                     args.json_summary_folder
+                     )
