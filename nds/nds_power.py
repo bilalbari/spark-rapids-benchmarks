@@ -367,7 +367,7 @@ if __name__ == "__main__":
     parser.add_argument('--delta_unmanaged',
                         action='store_true',
                         help='Use unmanaged tables for DeltaLake. This is useful for testing DeltaLake without ' +
-         '              leveraging a Metastore service.')
+        '               leveraging a Metastore service.')
     parser.add_argument('--keep_sc',
                         action='store_true',
                         help='Keep SparkContext alive after running all queries. This is a ' +
@@ -376,7 +376,7 @@ if __name__ == "__main__":
     parser.add_argument('--hive',
                         action='store_true',
                         help='use table meta information in Hive metastore directly without ' +
-                         'registering temp views.')
+                        'registering temp views.')
     parser.add_argument('--extra_time_log',
                         help='extra path to save time log when running in cloud environment where '+
                         'driver node/pod cannot be accessed easily. User needs to add essential extra ' +
