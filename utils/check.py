@@ -158,7 +158,7 @@ def get_dir_size(start_path):
 
 def check_json_summary_folder(json_summary_folder):
     if json_summary_folder:
-        # prepare a folder to save json summaries of query results
+    # prepare a folder to save json summaries of query results
         if not os.path.exists(json_summary_folder):
             os.makedirs(json_summary_folder)
         else:
