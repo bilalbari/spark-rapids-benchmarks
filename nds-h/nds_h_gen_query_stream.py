@@ -81,7 +81,7 @@ def generate_query_streams(args, tool_path):
             subprocess.run(base_cmd, check=True, cwd=str(work_dir),stdout=f)
 
 if __name__ == "__main__":
-    tool_path = check_build_nds_h()
+    jar_path, tool_path = check_build_nds_h()
     parser = parser = argparse.ArgumentParser()
     parser.add_argument("scale",
                         help="Assume a database of this scale factor.")

@@ -30,4 +30,5 @@ CMD=("$SPARK_HOME/bin/spark-submit")
 CMD+=("${SPARK_CONF[@]}")
 CMD+=("${MORE_ARGS[@]}")
 # submit
+echo "Executing command: ${CMD[@]}"
 "${CMD[@]}"

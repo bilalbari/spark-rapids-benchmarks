@@ -57,12 +57,14 @@ def check_build_nds_h():
     # we assume user won't move this script.
     src_dir = Path(__file__).parent.parent.absolute()
     tool_path = list(Path(src_dir / 'nds-h/tpch-gen/target/dbgen').rglob("dbgen"))
+    jar_path = list(
+        Path(src_dir / 'nds-h/tpch-gen/target').rglob("tpch-gen-*.jar"))
     print(tool_path)
     if tool_path == []:
         raise Exception('dbgen executable is ' +
                         'not found in `target` folder.' +
                         'Please refer to README document and build this project first.')
-    return tool_path[0]
+    return jar_path[0], tool_path[0]
 
 def check_build_nds():
     """check jar and tpcds executable
@@ -156,7 +158,7 @@ def get_dir_size(start_path):
 
 def check_json_summary_folder(json_summary_folder):
     if json_summary_folder:
-    # prepare a folder to save json summaries of query results
+        # prepare a folder to save json summaries of query results
         if not os.path.exists(json_summary_folder):
             os.makedirs(json_summary_folder)
         else:

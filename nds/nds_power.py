@@ -132,7 +132,7 @@ def run_one_query(spark_session,
         df.collect()
     else:
         ensure_valid_column_names(df).write.format(output_format).mode('overwrite').save(
-                output_path + '/' + query_name)
+            output_path + '/' + query_name)
 
 def ensure_valid_column_names(df: DataFrame):
     def is_column_start(char):
@@ -258,10 +258,10 @@ def run_query_stream(input_prefix,
         print("====== Run {} ======".format(query_name))
         q_report = PysparkBenchReport(spark_session, query_name)
         summary = q_report.report_on(run_one_query,spark_session,
-                                                   q_content,
-                                                   query_name,
-                                                   output_path,
-                                                   output_format)
+                                     q_content,
+                                     query_name,
+                                     output_path,
+                                     output_format)
         print(f"Time taken: {summary['queryTimes']} millis for {query_name}")
         query_times = summary['queryTimes']
         execution_time_list.append((spark_app_id, query_name, query_times[0]))
@@ -333,11 +333,11 @@ if __name__ == "__main__":
     parser = parser = argparse.ArgumentParser()
     parser.add_argument('input_prefix',
                         help='text to prepend to every input file path (e.g., "hdfs:///ds-generated-data"). ' +
-                        'If --hive or if input_format is "iceberg", this argument will be regarded as the value of property ' +
-                        '"spark.sql.catalog.spark_catalog.warehouse". Only default Spark catalog ' +
-                        'session name "spark_catalog" is supported now, customized catalog is not ' +
-                        'yet supported. Note if this points to a Delta Lake table, the path must be ' +
-                        'absolute. Issue: https://github.com/delta-io/delta/issues/555')
+                             'If --hive or if input_format is "iceberg", this argument will be regarded as the value of property ' +
+                             '"spark.sql.catalog.spark_catalog.warehouse". Only default Spark catalog ' +
+                             'session name "spark_catalog" is supported now, customized catalog is not ' +
+                             'yet supported. Note if this points to a Delta Lake table, the path must be ' +
+                             'absolute. Issue: https://github.com/delta-io/delta/issues/555')
     parser.add_argument('query_stream_file',
                         help='query stream file that contains NDS queries in specific order')
     parser.add_argument('time_log',
@@ -345,9 +345,9 @@ if __name__ == "__main__":
                         default="")
     parser.add_argument('--input_format',
                         help='type for input data source, e.g. parquet, orc, json, csv or iceberg, delta. ' +
-                        'Certain types are not fully supported by GPU reading, please refer to ' +
-                        'https://github.com/NVIDIA/spark-rapids/blob/branch-22.08/docs/compatibility.md ' +
-                        'for more details.',
+                             'Certain types are not fully supported by GPU reading, please refer to ' +
+                             'https://github.com/NVIDIA/spark-rapids/blob/branch-22.08/docs/compatibility.md ' +
+                             'for more details.',
                         choices=['parquet', 'orc', 'avro', 'csv', 'json', 'iceberg', 'delta'],
                         default='parquet')
     parser.add_argument('--output_prefix',
@@ -360,34 +360,34 @@ if __name__ == "__main__":
     parser.add_argument('--floats',
                         action='store_true',
                         help='When loading Text files like json and csv, schemas are required to ' +
-                        'determine if certain parts of the data are read as decimal type or not. '+
-                        'If specified, float data will be used.')
+                             'determine if certain parts of the data are read as decimal type or not. '+
+                             'If specified, float data will be used.')
     parser.add_argument('--json_summary_folder',
                         help='Empty folder/path (will create if not exist) to save JSON summary file for each query.')
     parser.add_argument('--delta_unmanaged',
                         action='store_true',
                         help='Use unmanaged tables for DeltaLake. This is useful for testing DeltaLake without ' +
-        '               leveraging a Metastore service.')
+                             '               leveraging a Metastore service.')
     parser.add_argument('--keep_sc',
                         action='store_true',
                         help='Keep SparkContext alive after running all queries. This is a ' +
-                        'limitation on Databricks runtime environment. User should always attach ' +
-                        'this flag when running on Databricks.')
+                             'limitation on Databricks runtime environment. User should always attach ' +
+                             'this flag when running on Databricks.')
     parser.add_argument('--hive',
                         action='store_true',
                         help='use table meta information in Hive metastore directly without ' +
-                        'registering temp views.')
+                             'registering temp views.')
     parser.add_argument('--extra_time_log',
                         help='extra path to save time log when running in cloud environment where '+
-                        'driver node/pod cannot be accessed easily. User needs to add essential extra ' +
-                        'jars and configurations to access different cloud storage systems. ' +
-                        'e.g. s3, gs etc.')
+                             'driver node/pod cannot be accessed easily. User needs to add essential extra ' +
+                             'jars and configurations to access different cloud storage systems. ' +
+                             'e.g. s3, gs etc.')
     parser.add_argument('--sub_queries',
                         type=lambda s: [x.strip() for x in s.split(',')],
                         help='comma separated list of queries to run. If not specified, all queries ' +
-                        'in the stream file will be run. e.g. "query1,query2,query3". Note, use ' +
-                        '"_part1" and "_part2" suffix for the following query names: ' +
-                        'query14, query23, query24, query39. e.g. query14_part1, query39_part2')
+                             'in the stream file will be run. e.g. "query1,query2,query3". Note, use ' +
+                             '"_part1" and "_part2" suffix for the following query names: ' +
+                             'query14, query23, query24, query39. e.g. query14_part1, query39_part2')
     parser.add_argument('--allow_failure',
                         action='store_true',
                         help='Do not exit with non zero when any query failed or any task failed')

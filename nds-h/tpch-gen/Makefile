@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-all: check-tpch-env prepare-target copy-dbgen modify-makefile modify-tpc-h build-dbgen
+all: check-tpch-env prepare-target copy-dbgen modify-makefile modify-tpc-h build-dbgen make-jar build-package
 
 check-tpch-env:
 ifndef TPCH_HOME
@@ -33,8 +33,6 @@ copy-dbgen:
 	# file and the sql files
 	cd "$(TPCH_HOME)/dbgen/queries"; dos2unix *.sql
 	cd "$(TPCH_HOME)/dbgen/queries"; dos2unix *.patch
-	# Unapply any patch if already done
-	-cd "$(TPCH_HOME)/dbgen/queries"; cat *.patch | patch -R -p1 -N
 	# apply patches to both source code and templates
 	cd "$(TPCH_HOME)/dbgen/queries" && cat *.patch | patch -p1
 	cp -r "$(TPCH_HOME)/dbgen" target/
@@ -63,3 +61,10 @@ modify-tpc-h:
 build-dbgen:
 	# Build it
 	cd target/dbgen ; make clean; make 2>/dev/null
+
+make-jar:
+	cd target;  (jar cvf dbgen.jar dbgen/ || gjar cvf dbgen.jar dbgen/ )
+
+build-package:
+	mvn package
+	

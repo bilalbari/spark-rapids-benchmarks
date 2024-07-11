@@ -25,24 +25,24 @@ You may not use NDS except in compliance with the Apache License, Version 2.0 an
     sudo locale-gen en_US.UTF-8
     sudo apt install openjdk-8-jdk-headless gcc make flex bison byacc maven
     ```
-3. Install and set up SPARK. 
-    - Download latest distro from [here](https://spark.apache.org/downloads.html)
-    - Preferably >= 3.4
-    - Find and note SPARK_HOME ( /DOWNLOAD/LOCATION/spark-<3.4.1>-bin-hadoop3 )
+3. Install and set up SPARK.
+   - Download latest distro from [here](https://spark.apache.org/downloads.html)
+   - Preferably >= 3.4
+   - Find and note SPARK_HOME ( /DOWNLOAD/LOCATION/spark-<3.4.1>-bin-hadoop3 )
 
 
 4. TPC-DS Tools
 
-    User must download TPC-DS Tools from [official TPC website](https://www.tpc.org/tpc_documents_current_versions/current_specifications5.asp). The tool will be downloaded as a zip package with a random guid string prefix.
-    After unzipping it, a folder called `DSGen-software-code-3.2.0rc1` will be seen.
+   User must download TPC-DS Tools from [official TPC website](https://www.tpc.org/tpc_documents_current_versions/current_specifications5.asp). The tool will be downloaded as a zip package with a random guid string prefix.
+   After unzipping it, a folder called `DSGen-software-code-3.2.0rc1` will be seen.
 
-    User must set a system environment variable `TPCDS_HOME` pointing to this directory. e.g.
+   User must set a system environment variable `TPCDS_HOME` pointing to this directory. e.g.
 
     ```bash
     export TPCDS_HOME=/PATH/TO/YOUR/DSGen-software-code-3.2.0rc1
     ```
 
-    This variable will help find the TPC-DS Tool when building essential component for this repository.
+   This variable will help find the TPC-DS Tool when building essential component for this repository.
 
 ## Use spark-submit-template with template
 
@@ -152,7 +152,8 @@ Parquet, Orc, Avro, JSON and Iceberg are supported for output data format at pre
 only Parquet and Orc are supported.
 
 Note: when exporting data from CSV to Iceberg, user needs to set necessary configs for Iceberg in submit template.
-e.g. [convert_submit_cpu_iceberg.template](./convert_submit_cpu_iceberg.template)
+e.g. [convert_submit_cpu_iceberg.template](./convert_submit_cpu_iceberg.template).
+To run iceberg against different Spark versions, please modify the Iceberg package version accordingly in the template file.
 
 User can also specify `--tables` to convert specific table or tables. See argument details below.
 
@@ -173,6 +174,9 @@ when you are about to shutdown the Metastore service.
 
 For [unmanaged tables](https://docs.databricks.com/lakehouse/data-objects.html#what-is-an-unmanaged-table),
 user doesn't need to create the Metastore service,  appending `--delta_unmanaged` to arguments will be enough.
+
+NOTE: To enabling Delta against different Spark versions, please modify the Delta package version accordingly in the template file.
+For more version compatibility information, please visit [compatibility with apache spark](https://docs.delta.io/latest/releases.html#compatibility-with-apache-spark).
 
 Arguments for `nds_transcode.py`:
 
@@ -405,7 +409,8 @@ update operations cannot be done atomically on raw Parquet/Orc files, so we use
 [Iceberg](https://iceberg.apache.org/) as dataset metadata manager to overcome the issue.
 
 Enabling Iceberg requires additional configuration. Please refer to [Iceberg Spark](https://iceberg.apache.org/docs/latest/getting-started/)
-for details. We also provide a Spark submit template with necessary Iceberg configs: [maintenance_iceberg.template](./maintenance_iceberg.template)
+for details. We also provide a Spark submit template with necessary Iceberg configs: [maintenance_iceberg.template](./maintenance_iceberg.template).
+To run iceberg against different Spark versions, please modify the Iceberg package version accordingly in the template file.
 
 The data maintenance queries are in [data_maintenance](./data_maintenance) folder. `DF_*.sql` are
 DELETE queries while `LF_*.sql` are INSERT queries.

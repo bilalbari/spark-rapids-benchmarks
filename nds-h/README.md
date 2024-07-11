@@ -103,8 +103,9 @@ To generate data for local -
 
 ```bash
 $ python nds_h_gen_data.py -h
-usage: nds_h_gen_data.py [-h] <scale> <parallel> <data_dir> [--overwrite_output]
+usage: nds_h_gen_data.py [-h] {local,hdfs} <scale> <parallel> <data_dir> [--overwrite_output]
 positional arguments:
+  {local,hdfs}        file system to save the generated data.
   scale               volume of data to generate in GB.
   parallel            build data in <parallel_value> separate chunks
   data_dir            generate data in directory.
@@ -118,7 +119,7 @@ optional arguments:
 Example command:
 
 ```bash
-python nds_h_gen_data.py 100 100 /data/raw_sf100 --overwrite_output
+python nds_h_gen_data.py hdfs 100 100 /data/raw_sf100 --overwrite_output
 ```
 
 ### Convert DSV to Parquet or Other data sources
@@ -219,6 +220,11 @@ optional arguments:
                         type of query output
   --property_file PROPERTY_FILE
                         property file for Spark configuration.
+  --json_summary_folder JSON_SUMMARY_FOLDER
+                        Empty folder/path (will create if not exist) to save JSON summary file for each query.
+  --sub_queries SUB_QUERIES
+                        comma separated list of queries to run. If not specified, all queries in the stream file will be run. 
+                        e.g. "query1,query2,query3". Note, use "_part1","_part2" and "part_3" suffix for the following query names: query15
 ```
 
 Example command to submit nds_h_power.py by spark-submit-template utility:

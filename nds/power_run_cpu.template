@@ -16,7 +16,7 @@
 #
 
 source base.template
-export SHUFFLE_PARTITIONS=${SHUFFLE_PARTITIONS:-200}
+export SHUFFLE_PARTITIONS=${SHUFFLE_PARTITIONS:-400}
 
 export SPARK_CONF=("--master" "${SPARK_MASTER}"
                    "--deploy-mode" "client"
@@ -29,4 +29,6 @@ export SPARK_CONF=("--master" "${SPARK_MASTER}"
                    "--conf" "spark.sql.adaptive.enabled=true"
                    "--conf" "spark.sql.broadcastTimeout=1200"
                    "--conf" "spark.dynamicAllocation.enabled=false"
+                   "--conf" "spark.eventLog.enabled=true"
+                   "--conf" "spark.eventLog.dir=/home/sbari/project-repos/data/nds_benchmark_100_event_logs"
                    "--jars" "$NDS_LISTENER_JAR")
